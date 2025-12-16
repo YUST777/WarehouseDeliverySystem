@@ -1,0 +1,57 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.6.0'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: 'qtbase'
+        
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+        
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      
+    - name: Build
+      run: cmake --build build --config Release
+      
+    - name: Deploy Qt dependencies
+      run: |
+        mkdir -p dist
+        cp build/Release/WarehouseDeliverySystem.exe dist/
+        windeployqt dist/WarehouseDeliverySystem.exe
+        cp input.txt dist/
+        
+    - name: Create ZIP package
+      run: Compress-Archive -Path dist/* -DestinationPath WarehouseDeliverySystem_Windows_x64.zip
+      
+    - name: Upload Windows Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: WarehouseDeliverySystem-Windows-x64
+        path: WarehouseDeliverySystem_Windows_x64.zip
+        
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: WarehouseDeliverySystem_Windows_x64.zip
