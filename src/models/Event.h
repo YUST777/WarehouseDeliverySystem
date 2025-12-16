@@ -1,6 +1,7 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include <string>
 #include <vector>
 #include <memory>
 
