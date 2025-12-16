@@ -7,6 +7,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# Windows-specific settings
+if(WIN32)
+    set(CMAKE_WIN32_EXECUTABLE ON)
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(SOURCES
@@ -48,10 +53,17 @@ set(HEADERS
     src/io/OutputWriter.h
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+
+# Set output directory
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug
+)
+

@@ -12,7 +12,8 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
@@ -23,32 +24,34 @@ jobs:
         arch: 'win64_msvc2019_64'
         cache: true
         
-    - name: Setup MSVC
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64
-        
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       
     - name: Build
       run: cmake --build build --config Release
       
     - name: Create dist folder
+      shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path dist
-        Copy-Item build\WarehouseDeliverySystem.exe dist\
-        Copy-Item input.txt dist\
-      shell: pwsh
+        $exePath = Get-ChildItem -Path build -Recurse -Filter "WarehouseDeliverySystem.exe" | Select-Object -First 1
+        if ($exePath) {
+          Copy-Item $exePath.FullName -Destination dist/
+        } else {
+          Write-Error "Executable not found!"
+          exit 1
+        }
+        Copy-Item input.txt -Destination dist/
         
     - name: Deploy Qt dependencies
+      shell: pwsh
       run: |
-        windeployqt --release --no-translations --no-system-d3d-compiler --no-opengl-sw dist\WarehouseDeliverySystem.exe
-      shell: cmd
+        $env:PATH = "$env:Qt6_DIR\bin;$env:PATH"
+        windeployqt --release --no-translations dist/WarehouseDeliverySystem.exe
         
     - name: Create ZIP package
-      run: Compress-Archive -Path dist\* -DestinationPath WarehouseDeliverySystem_Windows_x64.zip
       shell: pwsh
+      run: Compress-Archive -Path dist/* -DestinationPath WarehouseDeliverySystem_Windows_x64.zip
       
     - name: Upload Windows Build
       uses: actions/upload-artifact@v4
