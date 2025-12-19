@@ -37,8 +37,10 @@ private:
     // Cache
     QMap<int, QPointF> m_nodePositions;
     QMap<int, QGraphicsPixmapItem*> m_warehouseItems;
-    QMap<int, QGraphicsEllipseItem*> m_vehicleItems; // Using simple shapes for now, or pixmaps
+    QMap<int, QGraphicsEllipseItem*> m_vehicleItems;
     QMap<int, QGraphicsRectItem*> m_orderItems;
+    QMap<int, QGraphicsLineItem*> m_pathLines; // Lines showing vehicle paths
+    QMap<int, QGraphicsEllipseItem*> m_customerNodes; // Faint dots for all nodes
     
     // Animation state
     struct VehicleAnimState {

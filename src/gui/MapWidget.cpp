@@ -40,18 +40,26 @@ MapWidget::~MapWidget() {}
 void MapWidget::setupScene() {
     drawGrid();
     
-    // Initialize node positions (simple layout for now)
-    // We assume 100 potential nodes mapped to the grid
+    // Initialize node positions
     int rows = SCENE_HEIGHT / 100;
     int cols = SCENE_WIDTH / 100;
     
+    // Create random positions for 100 nodes
     for (int i = 0; i < 100; ++i) {
+        // ... (existing logic for positions is fine, let's just use it)
         int r = (i / cols) % rows;
         int c = i % cols;
-        // Add some jitter so it looks organic
-        int x = c * 100 + 50 + QRandomGenerator::global()->bounded(-20, 20);
-        int y = r * 100 + 50 + QRandomGenerator::global()->bounded(-20, 20);
-        m_nodePositions[i] = QPointF(x, y);
+        int x = c * 100 + 50 + QRandomGenerator::global()->bounded(-30, 30);
+        int y = r * 100 + 50 + QRandomGenerator::global()->bounded(-30, 30);
+        QPointF pos(x, y);
+        m_nodePositions[i] = pos;
+        
+        // Draw faint "Customer Node" if not a known warehouse (0,1,2 usually)
+        if (i >= 3) {
+            QGraphicsEllipseItem* house = m_scene->addEllipse(0, 0, 6, 6, Qt::NoPen, QBrush(QColor(60, 60, 60)));
+            house->setPos(pos - QPointF(3, 3));
+            house->setZValue(0);
+        }
     }
 }
 
@@ -67,41 +75,34 @@ void MapWidget::drawGrid() {
 
 QPointF MapWidget::getNodePosition(int nodeId) {
     if (!m_nodePositions.contains(nodeId)) {
-        // Fallback for unknown nodes
         m_nodePositions[nodeId] = QPointF(SCENE_WIDTH/2, SCENE_HEIGHT/2);
     }
     return m_nodePositions[nodeId];
 }
 
 void MapWidget::refresh() {
-    // Clear dynamic items (vehicles, orders) but keep grid/warehouses if static
-    // Actually, simple approach: remove known dynamic items
+    const auto& warehouses = m_simulator->getWarehouses();
     
     // 1. Draw Warehouses
-    const auto& warehouses = m_simulator->getWarehouses();
     for (const auto& pair : warehouses) {
         int id = pair.first;
         const Warehouse& w = pair.second;
         
         if (!m_warehouseItems.contains(id)) {
             QPointF pos = getNodePosition(w.getLocationNode());
-            
-            // Draw Warehouse Icon (Rect for now)
-            QGraphicsRectItem* rect = m_scene->addRect(0, 0, 40, 40, Qt::NoPen, QBrush(QColor(255, 140, 0))); // Dark Orange
+            QGraphicsRectItem* rect = m_scene->addRect(0, 0, 40, 40, Qt::NoPen, QBrush(QColor(255, 140, 0)));
             rect->setPos(pos - QPointF(20, 20));
-            rect->setZValue(1); // Bottom layer
+            rect->setZValue(1);
             
-            // Label
             QGraphicsTextItem* label = m_scene->addText(QString("WH %1").arg(id));
             label->setDefaultTextColor(Qt::white);
             label->setPos(pos - QPointF(20, 40));
             
-            m_warehouseItems[id] = nullptr; // Just marking as created
+            m_warehouseItems[id] = nullptr;
         }
     }
     
-    // 2. Draw Orders (Pending)
-    // Remove old order items
+    // 2. Draw Orders
     qDeleteAll(m_orderItems);
     m_orderItems.clear();
     
@@ -111,16 +112,18 @@ void MapWidget::refresh() {
         if (o.getStatus() == OrderStatus::Waiting || o.getStatus() == OrderStatus::Assigned) {
             QPointF pos = getNodePosition(o.getDestination());
             
+            // Bigger visual for orders
             QColor color = (o.getPriorityClass() == PriorityClass::VIP) ? Qt::yellow : Qt::cyan;
-            QGraphicsRectItem* item = m_scene->addRect(0, 0, 10, 10, Qt::NoPen, QBrush(color));
-            item->setPos(pos - QPointF(5, 5));
+            QGraphicsRectItem* item = m_scene->addRect(0, 0, 14, 14, QPen(Qt::white), QBrush(color));
+            item->setPos(pos - QPointF(7, 7));
+            item->setZValue(1.5);
             item->setToolTip(QString("Order #%1 (Due: %2)").arg(o.getId()).arg(o.getDueBy()));
             
             m_orderItems[o.getId()] = item;
         }
     }
     
-    // 3. Update Vehicles
+    // 3. Update Vehicles & Paths
     const auto& vehicles = m_simulator->getVehicles();
     for (const auto& pair : vehicles) {
         int vid = pair.first;
@@ -128,71 +131,76 @@ void MapWidget::refresh() {
         
         // Ensure vehicle item exists
         if (!m_vehicleItems.contains(vid)) {
-            QColor vColor = v.isRefrigerated() ? QColor(100, 149, 237) : QColor(144, 238, 144); // Blue/Green
-            QGraphicsEllipseItem* item = m_scene->addEllipse(0, 0, 20, 20, QPen(Qt::white), QBrush(vColor));
-            item->setZValue(2); // Top layer
+            QColor vColor = v.isRefrigerated() ? QColor(0, 122, 204) : QColor(46, 204, 113); // Brighter Blue/Green
+            QGraphicsEllipseItem* item = m_scene->addEllipse(0, 0, 24, 24, QPen(Qt::white, 2), QBrush(vColor));
+            item->setZValue(3);
             item->setToolTip(QString("Vehicle #%1").arg(vid));
             
             m_vehicleItems[vid] = item;
             
+            // Path Line
+            QGraphicsLineItem* line = m_scene->addLine(0,0,0,0, QPen(vColor, 2, Qt::DashLine));
+            line->setZValue(0.5);
+            line->setVisible(false);
+            m_pathLines[vid] = line;
+            
             // Init state
-            int startNode = v.getHomeWarehouse(); // Assuming home loc logic
-             // Ideally map warehouse ID to node ID. For now assume warehouse ID has a node.
-             // Wait, warehouse stores its locationNode.
-             // We need to look up warehouse to get node.
-            int startNodeId = 0; // Default
-            if (warehouses.count(v.getHomeWarehouse())) {
-                startNodeId = warehouses.at(v.getHomeWarehouse()).getLocationNode();
-            }
+            int startNodeId = 0;
+            if (warehouses.count(v.getHomeWarehouse())) startNodeId = warehouses.at(v.getHomeWarehouse()).getLocationNode();
             m_vehicleStates[vid].currentPos = getNodePosition(startNodeId);
             m_vehicleStates[vid].targetPos = m_vehicleStates[vid].currentPos;
-            item->setPos(m_vehicleStates[vid].currentPos - QPointF(10, 10));
+            item->setPos(m_vehicleStates[vid].currentPos - QPointF(12, 12));
         }
         
-        // Update Target
-        VehicleAnimState& state = m_vehicleStates[vid];
-        QPointF target;
+        // Update Target logic
+        int targetNode = -1;
+        if (v.getStatus() == VehicleStatus::Outbound) targetNode = v.getCurrentDestination();
+        else if (v.getStatus() == VehicleStatus::Returning) {
+            if (warehouses.count(v.getHomeWarehouse())) targetNode = warehouses.at(v.getHomeWarehouse()).getLocationNode();
+        }
         
-        if (v.getStatus() == VehicleStatus::Outbound) {
-            target = getNodePosition(v.getCurrentDestination());
-        } else if (v.getStatus() == VehicleStatus::Returning) {
-            // Find home node
-            int homeNode = 0;
-            if (warehouses.count(v.getHomeWarehouse())) {
-                homeNode = warehouses.at(v.getHomeWarehouse()).getLocationNode();
-            }
-            target = getNodePosition(homeNode);
+        if (targetNode != -1) {
+            m_vehicleStates[vid].targetPos = getNodePosition(targetNode);
+            m_pathLines[vid]->setLine(QLineF(m_vehicleStates[vid].currentPos, m_vehicleStates[vid].targetPos));
+            m_pathLines[vid]->setVisible(true);
         } else {
-             // At a warehouse or location
-             // If Available, it's at home
-             int homeNode = 0;
-             if (warehouses.count(v.getHomeWarehouse())) homeNode = warehouses.at(v.getHomeWarehouse()).getLocationNode();
-             target = getNodePosition(homeNode);
+            m_pathLines[vid]->setVisible(false);
+            // If idle, target = current
+            VehicleAnimState& state = m_vehicleStates[vid];
+            QPointF diff = state.targetPos - state.currentPos;
+            if (QPointF::dotProduct(diff, diff) < 1.0) {
+                 // Already at target, stay there?
+                 // Usually vehicle stays at node unless moving.
+                 // We rely on simulator logic mainly.
+            }
         }
-        
-        state.targetPos = target;
     }
 }
 
 void MapWidget::updateAnimation() {
-    // Smoothly interpolate vehicles towards target
     for (auto it = m_vehicleItems.begin(); it != m_vehicleItems.end(); ++it) {
         int vid = it.key();
         QGraphicsItem* item = it.value();
         VehicleAnimState& state = m_vehicleStates[vid];
+        QGraphicsLineItem* line = m_pathLines.value(vid);
         
         QPointF diff = state.targetPos - state.currentPos;
         double dist = std::sqrt(diff.x()*diff.x() + diff.y()*diff.y());
         
         if (dist > 1.0) {
-            // Move towards target
-            double speed = 5.0; // Pxls per frame
+            double speed = 4.0; 
             QPointF move = diff * (speed / dist);
             state.currentPos += move;
+            
+            // Update line to start from current pos
+            if (line && line->isVisible()) {
+                line->setLine(QLineF(state.currentPos, state.targetPos));
+            }
         } else {
             state.currentPos = state.targetPos;
+            if (line) line->setVisible(false); // Hide line when arrived
         }
         
-        item->setPos(state.currentPos - QPointF(10, 10)); // Center offset
+        item->setPos(state.currentPos - QPointF(12, 12));
     }
 }
