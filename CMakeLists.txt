@@ -30,6 +30,7 @@ set(SOURCES
     src/gui/EventLogWidget.cpp
     src/gui/StatsWidget.cpp
     src/gui/ControlBar.cpp
+    src/gui/MapWidget.cpp
     src/io/InputParser.cpp
     src/io/OutputWriter.cpp
 )

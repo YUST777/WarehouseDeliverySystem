@@ -12,6 +12,7 @@
 #include "OrdersPanel.h"
 #include "WarehousePanel.h"
 #include "VehiclePanel.h"
+#include "MapWidget.h"
 #include "EventLogWidget.h"
 #include "ControlBar.h"
 
@@ -57,6 +58,7 @@ private:
     OrdersPanel* m_ordersPanel;
     WarehousePanel* m_warehousePanel;
     VehiclePanel* m_vehiclePanel;
+    MapWidget* m_mapWidget;
     
     // Side panel
     EventLogWidget* m_eventLog;

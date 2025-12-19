@@ -118,7 +118,9 @@ void MainWindow::setupCentralWidget() {
     m_ordersPanel = new OrdersPanel(this);
     m_warehousePanel = new WarehousePanel(this);
     m_vehiclePanel = new VehiclePanel(this);
+    m_mapWidget = new MapWidget(m_simulator, this);
     
+    m_tabWidget->addTab(m_mapWidget, "🗺️ Map"); // Add Map first
     m_tabWidget->addTab(m_ordersPanel, "📦 Orders");
     m_tabWidget->addTab(m_warehousePanel, "🏭 Warehouses");
     m_tabWidget->addTab(m_vehiclePanel, "🚚 Vehicles");
@@ -245,4 +247,5 @@ void MainWindow::updateAllPanels() {
                           m_simulator->getStdQueue());
     m_warehousePanel->update(m_simulator->getWarehouses());
     m_vehiclePanel->update(m_simulator->getVehicles());
+    m_mapWidget->refresh();
 }
