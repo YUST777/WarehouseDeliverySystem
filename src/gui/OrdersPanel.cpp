@@ -19,7 +19,10 @@ OrdersPanel::OrdersPanel(QWidget* parent)
     vipLayout->setContentsMargins(5, 5, 5, 5);
     
     m_vipLabel = new QLabel("⭐ VIP Orders Queue (0)");
-    m_vipLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #ffd700;");
+    QFont headerFont = m_vipLabel->font();
+    headerFont.setPointSize(12);
+    headerFont.setBold(true);
+    m_vipLabel->setFont(headerFont);
     vipLayout->addWidget(m_vipLabel);
     
     m_vipTable = new QTableWidget();
@@ -34,7 +37,7 @@ OrdersPanel::OrdersPanel(QWidget* parent)
     stdLayout->setContentsMargins(5, 5, 5, 5);
     
     m_stdLabel = new QLabel("📦 Standard Orders Queue (0)");
-    m_stdLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #87ceeb;");
+    m_stdLabel->setFont(headerFont);
     stdLayout->addWidget(m_stdLabel);
     
     m_stdTable = new QTableWidget();
@@ -98,18 +101,19 @@ void OrdersPanel::setupInputForm() {
     
     // VIP checkbox
     m_vipCheck = new QCheckBox("⭐ VIP Order");
-    m_vipCheck->setStyleSheet("QCheckBox { font-size: 14px; font-weight: bold; }");
     formLayout->addWidget(m_vipCheck);
     
     // Separator
     QFrame* line1 = new QFrame();
     line1->setFrameShape(QFrame::HLine);
-    line1->setStyleSheet("background-color: #3a3a5a;");
+    line1->setFrameShadow(QFrame::Sunken);
     formLayout->addWidget(line1);
     
     // Items section
     QLabel* itemsLabel = new QLabel("📋 Order Items:");
-    itemsLabel->setStyleSheet("font-weight: bold; color: #87ceeb;");
+    QFont itemsFont = itemsLabel->font();
+    itemsFont.setBold(true);
+    itemsLabel->setFont(itemsFont);
     formLayout->addWidget(itemsLabel);
     
     // Item input row
@@ -130,13 +134,11 @@ void OrdersPanel::setupInputForm() {
     
     m_addItemBtn = new QPushButton("+");
     m_addItemBtn->setFixedWidth(30);
-    m_addItemBtn->setStyleSheet("font-size: 16px; font-weight: bold;");
     connect(m_addItemBtn, &QPushButton::clicked, this, &OrdersPanel::onAddItemClicked);
     itemInputLayout->addWidget(m_addItemBtn);
     
     m_removeItemBtn = new QPushButton("-");
     m_removeItemBtn->setFixedWidth(30);
-    m_removeItemBtn->setStyleSheet("font-size: 16px; font-weight: bold;");
     connect(m_removeItemBtn, &QPushButton::clicked, this, &OrdersPanel::onRemoveItemClicked);
     itemInputLayout->addWidget(m_removeItemBtn);
     
@@ -155,19 +157,17 @@ void OrdersPanel::setupInputForm() {
     // Separator
     QFrame* line2 = new QFrame();
     line2->setFrameShape(QFrame::HLine);
-    line2->setStyleSheet("background-color: #3a3a5a;");
+    line2->setFrameShadow(QFrame::Sunken);
     formLayout->addWidget(line2);
     
     // Buttons
     QHBoxLayout* btnLayout = new QHBoxLayout();
     
     m_addOrderBtn = new QPushButton("➕ Add Order");
-    m_addOrderBtn->setStyleSheet("font-size: 14px; font-weight: bold; padding: 10px;");
     connect(m_addOrderBtn, &QPushButton::clicked, this, &OrdersPanel::onAddOrderClicked);
     btnLayout->addWidget(m_addOrderBtn);
     
     m_removeOrderBtn = new QPushButton("➖ Remove Selected");
-    m_removeOrderBtn->setStyleSheet("font-size: 14px; padding: 10px;");
     connect(m_removeOrderBtn, &QPushButton::clicked, this, &OrdersPanel::onRemoveOrderClicked);
     btnLayout->addWidget(m_removeOrderBtn);
     

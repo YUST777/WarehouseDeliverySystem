@@ -13,22 +13,19 @@ WarehousePanel::WarehousePanel(QWidget* parent)
     QHBoxLayout* headerLayout = new QHBoxLayout();
     
     m_titleLabel = new QLabel("🏭 Warehouse Inventory");
-    m_titleLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #e94560;");
+    QFont titleFont = m_titleLabel->font();
+    titleFont.setPointSize(14);
+    titleFont.setBold(true);
+    m_titleLabel->setFont(titleFont);
     headerLayout->addWidget(m_titleLabel);
     
     headerLayout->addStretch();
     
     QLabel* selectLabel = new QLabel("Select Warehouse:");
-    selectLabel->setStyleSheet("font-size: 14px;");
     headerLayout->addWidget(selectLabel);
     
     m_warehouseSelector = new QComboBox();
     m_warehouseSelector->setMinimumWidth(150);
-    m_warehouseSelector->setStyleSheet(
-        "QComboBox { background-color: #0f3460; color: #e0e0e0; padding: 5px; border-radius: 4px; }"
-        "QComboBox::drop-down { border: none; }"
-        "QComboBox QAbstractItemView { background-color: #16213e; color: #e0e0e0; selection-background-color: #e94560; }"
-    );
     connect(m_warehouseSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &WarehousePanel::onWarehouseSelected);
     headerLayout->addWidget(m_warehouseSelector);
@@ -49,7 +46,6 @@ WarehousePanel::WarehousePanel(QWidget* parent)
     
     // Summary
     m_summaryLabel = new QLabel("Total Items: 0");
-    m_summaryLabel->setStyleSheet("font-size: 14px; color: #87ceeb; padding: 10px;");
     mainLayout->addWidget(m_summaryLabel);
 }
 

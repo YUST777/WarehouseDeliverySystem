@@ -13,13 +13,26 @@ mkdir -p "$LIB_DIR"
 mkdir -p "$DIST_DIR/platforms"
 mkdir -p "$DIST_DIR/wayland"
 
-# Copy main executable
-cp "build/$APP_NAME" "$DIST_DIR/"
+# Find executable
+EXE_PATH=""
+if [ -f "build/Release/$APP_NAME" ]; then
+    EXE_PATH="build/Release/$APP_NAME"
+elif [ -f "build/Debug/$APP_NAME" ]; then
+    EXE_PATH="build/Debug/$APP_NAME"
+elif [ -f "build/$APP_NAME" ]; then
+    EXE_PATH="build/$APP_NAME"
+else
+    echo "Error: Executable not found!"
+    exit 1
+fi
+
+echo "Using executable: $EXE_PATH"
+cp "$EXE_PATH" "$DIST_DIR/$APP_NAME"
 chmod +x "$DIST_DIR/$APP_NAME"
 
 # Copy Qt libraries
 echo "Copying Qt libraries..."
-for lib in $(ldd "build/$APP_NAME" | grep -E "Qt|icu|xkb|xcb" | awk '{print $3}'); do
+for lib in $(ldd "$EXE_PATH" | grep -E "Qt|icu|xkb|xcb" | awk '{print $3}'); do
     if [ -f "$lib" ]; then
         cp "$lib" "$LIB_DIR/"
         echo "  Copied: $(basename $lib)"

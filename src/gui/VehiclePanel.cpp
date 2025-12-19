@@ -1,6 +1,7 @@
 #include "VehiclePanel.h"
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QGroupBox>
 
 VehiclePanel::VehiclePanel(QWidget* parent)
     : QWidget(parent) {
@@ -9,7 +10,10 @@ VehiclePanel::VehiclePanel(QWidget* parent)
     mainLayout->setContentsMargins(10, 10, 10, 10);
     
     QLabel* titleLabel = new QLabel("🚚 Vehicle Fleet");
-    titleLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #e94560;");
+    QFont titleFont = titleLabel->font();
+    titleFont.setPointSize(14);
+    titleFont.setBold(true);
+    titleLabel->setFont(titleFont);
     mainLayout->addWidget(titleLabel);
     
     QScrollArea* scrollArea = new QScrollArea();
@@ -54,45 +58,37 @@ void VehiclePanel::update(const std::map<int, Vehicle>& vehicles) {
 }
 
 QWidget* VehiclePanel::createVehicleCard(const Vehicle& vehicle) {
-    QFrame* card = new QFrame();
-    card->setFixedSize(200, 150);
-    card->setFrameShape(QFrame::StyledPanel);
-    
-    QColor statusColor = getStatusColor(vehicle.getStatus());
-    card->setStyleSheet(QString(
-        "QFrame { background-color: #16213e; border: 2px solid %1; border-radius: 10px; }"
-    ).arg(statusColor.name()));
-    
-    QVBoxLayout* layout = new QVBoxLayout(card);
-    layout->setSpacing(8);
-    
-    // Header with ID and type
-    QLabel* header = new QLabel(QString("%1 Vehicle #%2")
+    QGroupBox* card = new QGroupBox(QString("%1 Vehicle #%2")
         .arg(vehicle.isRefrigerated() ? "❄️" : "📦")
         .arg(vehicle.getId()));
-    header->setStyleSheet("font-size: 14px; font-weight: bold; color: #e0e0e0;");
-    layout->addWidget(header);
+        
+    QVBoxLayout* layout = new QVBoxLayout(card);
+    layout->setSpacing(5);
     
     // Status
     QString statusIcon = getStatusIcon(vehicle.getStatus());
     QLabel* status = new QLabel(QString("%1 %2")
         .arg(statusIcon)
         .arg(QString::fromStdString(vehicle.getStatusString())));
-    status->setStyleSheet(QString("font-size: 13px; color: %1; font-weight: bold;").arg(statusColor.name()));
+        
+    // Use standard palette for text colors if possible, or muted colors
+    // We'll keep some color for status to make it readable but avoid the heavy styling
+    QPalette pal = status->palette();
+    if (vehicle.getStatus() == VehicleStatus::Available) pal.setColor(QPalette::WindowText, Qt::darkGreen);
+    else if (vehicle.getStatus() == VehicleStatus::Maintenance) pal.setColor(QPalette::WindowText, Qt::darkRed);
+    else if (vehicle.getStatus() == VehicleStatus::Returning) pal.setColor(QPalette::WindowText, QColor(255, 140, 0)); // Dark Orange
+    status->setPalette(pal);
+    
     layout->addWidget(status);
     
     // Details
-    QLabel* type = new QLabel(QString("Type: %1").arg(QString::fromStdString(vehicle.getTypeString())));
-    type->setStyleSheet("font-size: 11px; color: #87ceeb;");
-    layout->addWidget(type);
+    layout->addWidget(new QLabel(QString("Type: %1").arg(QString::fromStdString(vehicle.getTypeString()))));
     
     QLabel* capacity = new QLabel(QString("Capacity: %1 | Speed: %2")
         .arg(vehicle.getCapacity()).arg(vehicle.getSpeed()));
-    capacity->setStyleSheet("font-size: 11px; color: #87ceeb;");
     layout->addWidget(capacity);
     
     QLabel* home = new QLabel(QString("Home: Warehouse #%1").arg(vehicle.getHomeWarehouse()));
-    home->setStyleSheet("font-size: 11px; color: #87ceeb;");
     layout->addWidget(home);
     
     // Orders (if any)
@@ -102,12 +98,11 @@ QWidget* VehiclePanel::createVehicleCard(const Vehicle& vehicle) {
             orderStr += QString("#%1 ").arg(oid);
         }
         QLabel* orders = new QLabel(orderStr);
-        orders->setStyleSheet("font-size: 10px; color: #ffd700;");
+        // orders->setStyleSheet("font-weight: bold;"); // Optional bold
         layout->addWidget(orders);
     }
     
     layout->addStretch();
-    
     return card;
 }
 

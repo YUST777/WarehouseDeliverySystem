@@ -27,40 +27,11 @@ MainWindow::MainWindow(QWidget* parent)
     statusBar()->addWidget(m_timeLabel);
     statusBar()->addPermanentWidget(m_statusLabel);
     
-    // Apply dark theme
-    setStyleSheet(R"(
-        QMainWindow { background-color: #1a1a2e; }
-        QTabWidget::pane { border: 1px solid #3a3a5a; background-color: #16213e; }
-        QTabBar::tab { background-color: #1a1a2e; color: #e0e0e0; padding: 10px 20px; border: 1px solid #3a3a5a; }
-        QTabBar::tab:selected { background-color: #0f3460; border-bottom: 2px solid #e94560; }
-        QTableWidget { background-color: #16213e; color: #e0e0e0; gridline-color: #3a3a5a; }
-        QTableWidget::item { padding: 5px; }
-        QTableWidget::item:selected { background-color: #0f3460; }
-        QHeaderView::section { background-color: #1a1a2e; color: #e94560; padding: 8px; border: 1px solid #3a3a5a; }
-        QLabel { color: #e0e0e0; }
-        QPushButton { background-color: #0f3460; color: #e0e0e0; border: none; padding: 8px 16px; border-radius: 4px; }
-        QPushButton:hover { background-color: #e94560; }
-        QPushButton:pressed { background-color: #c92a4a; }
-        QPushButton:disabled { background-color: #3a3a5a; color: #8a8a8a; }
-        QSlider::groove:horizontal { background: #3a3a5a; height: 6px; border-radius: 3px; }
-        QSlider::handle:horizontal { background: #e94560; width: 16px; margin: -5px 0; border-radius: 8px; }
-        QTextEdit { background-color: #0a0a1a; color: #00ff00; font-family: 'Consolas', monospace; border: 1px solid #3a3a5a; }
-        QStatusBar { background-color: #0f3460; color: #e0e0e0; }
-        QMenuBar { background-color: #1a1a2e; color: #e0e0e0; }
-        QMenuBar::item:selected { background-color: #0f3460; }
-        QMenu { background-color: #16213e; color: #e0e0e0; border: 1px solid #3a3a5a; }
-        QMenu::item:selected { background-color: #0f3460; }
-        QToolBar { background-color: #1a1a2e; border: none; spacing: 10px; padding: 5px; }
-        QSplitter::handle { background-color: #3a3a5a; }
-        QSpinBox, QLineEdit, QComboBox { background-color: #0f3460; color: #e0e0e0; border: 1px solid #3a3a5a; padding: 5px; border-radius: 4px; }
-        QSpinBox::up-button, QSpinBox::down-button { background-color: #3a3a5a; }
-        QCheckBox { color: #e0e0e0; }
-        QCheckBox::indicator { width: 18px; height: 18px; }
-        QCheckBox::indicator:unchecked { background-color: #3a3a5a; border-radius: 3px; }
-        QCheckBox::indicator:checked { background-color: #e94560; border-radius: 3px; }
-        QGroupBox { color: #e94560; font-weight: bold; border: 1px solid #3a3a5a; border-radius: 5px; margin-top: 10px; padding-top: 10px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }
-    )");
+    // Initial status
+    m_timeLabel = new QLabel("Time: 0");
+    m_statusLabel = new QLabel("Ready - Add orders manually or load a file");
+    statusBar()->addWidget(m_timeLabel);
+    statusBar()->addPermanentWidget(m_statusLabel);
 }
 
 MainWindow::~MainWindow() {}

@@ -9,10 +9,6 @@ int main(int argc, char *argv[]) {
     QApplication::setOrganizationName("DSA Project");
     QApplication::setApplicationVersion("1.0");
     
-    // Set application-wide font
-    QFont font("Segoe UI", 10);
-    app.setFont(font);
-    
     // Create and show main window
     MainWindow mainWindow;
     mainWindow.show();
