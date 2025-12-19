@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
     
     setWindowTitle("Warehouse & Delivery Management System");
-    setMinimumSize(1200, 800);
+    setMinimumSize(1000, 700); // Allow resizing to smaller screens
     
     // Create simulator
     m_simulator = new Simulator(this);
@@ -20,12 +20,6 @@ MainWindow::MainWindow(QWidget* parent)
     setupToolBar();
     setupCentralWidget();
     setupConnections();
-    
-    // Initial status
-    m_timeLabel = new QLabel("Time: 0");
-    m_statusLabel = new QLabel("Ready - Add orders manually or load a file");
-    statusBar()->addWidget(m_timeLabel);
-    statusBar()->addPermanentWidget(m_statusLabel);
     
     // Initial status
     m_timeLabel = new QLabel("Time: 0");
